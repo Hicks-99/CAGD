@@ -3,7 +3,7 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
-    "packageManager": "pnpm@10.31.0",
+	"packageManager": "pnpm@10.31.0",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -21,7 +21,8 @@
 		"svelte": "^5.57.2",
 		"svelte-check": "^4.7.7",
 		"typescript": "^6.0.3",
-		"vite": "^8.3.4"
+		"vite": "^8.3.4",
+		"wrangler": "^4.151.2"
 	},
 	"imports": {
 		"#lib": "./src/lib/index.js",
