@@ -40,7 +40,7 @@
         const cube = new THREE.Mesh(geometry, material);
         scene.add(cube);
 
-        const coordSystem = new CoordSystem(scene, camera);
+        const coordSystem = new CoordSystem(scene, camera, canvasRef);
 
         camera.position.z = 3;
 

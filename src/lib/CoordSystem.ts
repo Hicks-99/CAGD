@@ -4,6 +4,8 @@ export class CoordSystem {
 	private readonly gridGeometry = new THREE.BufferGeometry();
 	private readonly gridMaterial = new THREE.LineBasicMaterial({
 		color: 0x444444,
+        transparent: true,
+        opacity: 0.2,
 	});
 	private readonly gridLines = new THREE.LineSegments(
 		this.gridGeometry,
@@ -37,6 +39,7 @@ export class CoordSystem {
 	constructor(
 		private readonly scene: THREE.Scene,
 		private readonly camera: THREE.OrthographicCamera,
+        private readonly canvas: HTMLCanvasElement
 	) {
 		scene.add(this.gridLines);
 		scene.add(this.xAxisLines);
@@ -121,19 +124,19 @@ export class CoordSystem {
 
         this.resetSpritePool();
 
-        const spriteScaleX = 0.05 * worldWidth;
-        const spriteScaleY = 0.05 * worldHeight;
+        const spriteScaleX = (worldWidth / this.canvas.width) * 64;
+        const spriteScaleY = (worldHeight / this.canvas.height) * 32;
 
         const labelY =
 					Math.max(
-						yMin + spriteScaleY * 0.8,
-						Math.min(yMax - spriteScaleY * 0.8, 0),
+						yMin + spriteScaleY * 0.25,
+						Math.min(yMax - spriteScaleY * 0.25, 0),
 					) -
-					spriteScaleY * 0.25;
+					spriteScaleY * 0.4;
 		const labelX =
 					Math.max(
-						xMin + spriteScaleX * 0.8,
-						Math.min(xMax - spriteScaleX * 0.8, 0),
+						xMin + spriteScaleX * 0.25,
+						Math.min(xMax - spriteScaleX * 0.25, 0),
 					) +
 					spriteScaleX * 0.25;
 
