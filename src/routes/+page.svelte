@@ -1,54 +1,73 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import * as THREE from 'three';
+    import Canvas from '$comps/Canvas.svelte';
+    import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
-    let canvasRef: HTMLCanvasElement;
-    let canvasWidth = $state(0);
-    let canvasHeight = $state(0);
+    function handleImport() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.obj';
 
-    onMount(() => {
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas: canvasRef, antialias: true });
-        renderer.setSize(canvasWidth, canvasHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
-
-        camera.position.z = 3;
-
-        let animationFrameId: number;
-        const animate = () => {
-            animationFrameId = requestAnimationFrame(animate);
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
-            renderer.render(scene, camera);
+        input.onchange = (event: Event) => {
+            const target = event.target as HTMLInputElement;
+            if (target.files && target.files.length > 0) {
+                const file = target.files[0];
+                const loader = new OBJLoader();
+                const reader = new FileReader();
+                
+                reader.addEventListener('load', () => {
+                    const contents = reader.result as string;
+                    const object = loader.parse(contents);
+                    console.log('Imported OBJ:', object);
+                });
+                
+                reader.readAsText(file);
+            }
         };
-        animate();
-    })
+
+        input.click();
+    }
 </script>
 
 <div class="container">
-    <nav>
-        <button>Import</button>
-    </nav>
-    <canvas bind:this={canvasRef} bind:clientHeight={canvasHeight} bind:clientWidth={canvasWidth}></canvas>
+    <div class="nav-container">
+        <nav>
+            <button onclick={handleImport} class="import-btn">Import</button>
+        </nav>
+    </div>
+    <div class="canvas-container">
+        <Canvas />
+    </div>
 </div>
 
 <style>
     .container {
-        width: 100%;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
+        height: 100dvh;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        background: black;
     }
 
-    canvas {
-        width: 100%;
-        height: 100%;
-        display: block;
+    .nav-container {
+        padding: 0.5rem;
+    }
+
+    nav {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+        border-radius: 8px;
+        background: darkblue;
+    }
+
+    .canvas-container {
+        padding: 0 0.5rem 0.5rem 0.5rem;
+    }
+
+    .import-btn {
+        border: none;
+        background: none;
+        color: white;
+        cursor: pointer;
+        padding: 0.5rem
     }
 </style>
