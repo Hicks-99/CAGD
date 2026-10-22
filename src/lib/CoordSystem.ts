@@ -167,10 +167,12 @@ export class CoordSystem {
             sprite.scale.set(spriteScaleX, spriteScaleY, 1);
 		}
 
-        const originSprite = this.getSprite();
-        originSprite.material.map = this.getLabelTexture("0");
-        originSprite.position.set(labelX, labelY, 0);
-        originSprite.scale.set(spriteScaleX, spriteScaleY, 1);
+        if (Math.abs(0) >= yMin && Math.abs(0) <= yMax && Math.abs(0) >= xMin && Math.abs(0) <= xMax) {
+            const sprite = this.getSprite();
+            sprite.material.map = this.getLabelTexture("0");
+            sprite.position.set(labelX, labelY, 0);
+            sprite.scale.set(spriteScaleX, spriteScaleY, 1);
+        }
 
 		this.gridGeometry.setAttribute(
 			"position",
