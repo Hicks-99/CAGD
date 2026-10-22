@@ -32,7 +32,7 @@
         );
         renderer = new THREE.WebGLRenderer({ canvas: canvasRef, antialias: true });
         renderer.setSize(canvasWidth, canvasHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         viewport = new Viewport(canvasRef, scene, camera, renderer);
 
         const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -95,6 +95,9 @@
         bottom: 0;
         display: block;
         cursor: grab;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
     }
 
     canvas:active {

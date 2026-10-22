@@ -41,6 +41,11 @@ export class CoordSystem {
 		private readonly camera: THREE.OrthographicCamera,
         private readonly canvas: HTMLCanvasElement
 	) {
+        this.gridLines.frustumCulled = false;
+        this.xAxisLines.frustumCulled = false;
+        this.yAxisLines.frustumCulled = false;
+        this.labelGroup.frustumCulled = false;
+
 		scene.add(this.gridLines);
 		scene.add(this.xAxisLines);
         scene.add(this.yAxisLines);
@@ -129,14 +134,14 @@ export class CoordSystem {
 
         const labelY =
 					Math.max(
-						yMin + spriteScaleY * 0.25,
-						Math.min(yMax - spriteScaleY * 0.25, 0),
+						yMin + spriteScaleY * 0.8,
+						Math.min(yMax - spriteScaleY * 0.5, 0),
 					) -
 					spriteScaleY * 0.4;
 		const labelX =
 					Math.max(
 						xMin + spriteScaleX * 0.25,
-						Math.min(xMax - spriteScaleX * 0.25, 0),
+						Math.min(xMax - spriteScaleX * 0.5, 0),
 					) +
 					spriteScaleX * 0.25;
 
