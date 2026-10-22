@@ -21,13 +21,13 @@ export class Viewport {
 		this.renderer.render(this.scene, this.camera);
 	}
 
-	private onPointerDown = (event: PointerEvent) => {
+	private readonly onPointerDown = (event: PointerEvent) => {
 		this.isDragging = true;
 		this.prevPointer = { x: event.clientX, y: event.clientY };
 		this.canvas.setPointerCapture(event.pointerId);
-	}
+	};
 
-	private onPointerMove = (event: PointerEvent) => {
+	private readonly onPointerMove = (event: PointerEvent) => {
 		if (!this.isDragging) return;
 
 		const deltaX = event.clientX - this.prevPointer.x;
@@ -38,19 +38,19 @@ export class Viewport {
 		const worldHeight =
 			(this.camera.top - this.camera.bottom) / this.camera.zoom;
 
-		this.scene.position.x += (deltaX / this.canvas.width) * worldWidth;
-		this.scene.position.y -= (deltaY / this.canvas.height) * worldHeight;
+		this.camera.position.x -= (deltaX / this.canvas.width) * worldWidth;
+		this.camera.position.y += (deltaY / this.canvas.height) * worldHeight;
 
 		this.prevPointer = { x: event.clientX, y: event.clientY };
 		this.render();
-	}
+	};
 
-	private onPointerUp = (event: PointerEvent) => {
+	private readonly onPointerUp = (event: PointerEvent) => {
 		this.isDragging = false;
 		this.canvas.releasePointerCapture(event.pointerId);
-	}
+	};
 
-	private onWheel = (event: WheelEvent) => {
+	private readonly onWheel = (event: WheelEvent) => {
 		event.preventDefault();
 		const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
 
@@ -61,7 +61,7 @@ export class Viewport {
 
 		this.camera.updateProjectionMatrix();
 		this.render();
-	}
+	};
 
 	public dispose() {
 		this.canvas.removeEventListener("pointerdown", this.onPointerDown);
@@ -69,6 +69,6 @@ export class Viewport {
 		this.canvas.removeEventListener("pointerup", this.onPointerUp);
 		this.canvas.removeEventListener("pointercancel", this.onPointerUp);
 		this.canvas.removeEventListener("wheel", this.onWheel);
-        this.renderer.dispose();
+		this.renderer.dispose();
 	}
 }

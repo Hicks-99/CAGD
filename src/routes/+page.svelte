@@ -56,7 +56,7 @@
         align-items: center;
         padding: 0.5rem;
         border-radius: 8px;
-        background: darkblue;
+        background: blue;
     }
 
     .canvas-container {

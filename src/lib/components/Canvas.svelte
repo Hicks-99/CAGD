@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import * as THREE from 'three';
     import { Viewport } from '$lib/Viewport';
+    import { CoordSystem } from '$lib/CoordSystem';
 
     let canvasRef: HTMLCanvasElement;
     let canvasWidth = $state(0);
@@ -20,6 +21,7 @@
 
     onMount(() => {
         scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff);
         camera = new THREE.OrthographicCamera(
             (-fristumSize * canvasAspect) / 2,
             (fristumSize * canvasAspect) / 2,
@@ -38,22 +40,23 @@
         const cube = new THREE.Mesh(geometry, material);
         scene.add(cube);
 
-        camera.position.z = 3;
+        const coordSystem = new CoordSystem(scene, camera);
 
-        const axesHelper = new THREE.AxesHelper(5);
-        scene.add(axesHelper);
+        camera.position.z = 3;
 
         let animationFrameId: number;
         const animate = () => {
             animationFrameId = requestAnimationFrame(animate);
             cube.rotation.x += 0.01;
             cube.rotation.y += 0.01;
+            coordSystem.update();
             viewport.render();
         };
         animate();
 
         return () => {
             cancelAnimationFrame(animationFrameId);
+            coordSystem.dispose();
             viewport.dispose();
             geometry.dispose();
             material.dispose();
