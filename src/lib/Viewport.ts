@@ -4,7 +4,7 @@ export class Viewport {
 	constructor(
 		private readonly canvas: HTMLCanvasElement,
 		private readonly scene: THREE.Scene,
-		private readonly camera: THREE.OrthographicCamera,
+		public readonly camera: THREE.OrthographicCamera,
 		private readonly renderer: THREE.WebGLRenderer,
 	) {
 		canvas.addEventListener("pointerdown", this.onPointerDown);
@@ -16,19 +16,44 @@ export class Viewport {
 
 	private isDragging = false;
 	private prevPointer = { x: 0, y: 0 };
+	private readonly allowedMouseButtons = new Set([0, 1, 2]);
+	private readonly renderLoopCallbacks: Array<() => void> = [];
 
-	public render() {
+	public addToRenderLoop(renderLoop: () => void): void {
+		this.renderLoopCallbacks.push(renderLoop);
+	}
+
+	public render(): void {
+		for (const callback of this.renderLoopCallbacks) {
+			callback();
+		}
 		this.renderer.render(this.scene, this.camera);
 	}
 
-	private readonly onPointerDown = (event: PointerEvent) => {
+	public disableLeftClick(): void {
+		this.allowedMouseButtons.delete(0);
+	}
+
+	public enableLeftClick(): void {
+		this.allowedMouseButtons.add(0);
+	}
+
+	private readonly onPointerDown = (event: PointerEvent): void => {
+		if (!this.allowedMouseButtons.has(event.button)) {
+			return;
+		}
+
 		this.isDragging = true;
 		this.prevPointer = { x: event.clientX, y: event.clientY };
-		this.canvas.setPointerCapture(event.pointerId);
+		if (this.canvas.setPointerCapture) {
+			this.canvas.setPointerCapture(event.pointerId);
+		}
 	};
 
-	private readonly onPointerMove = (event: PointerEvent) => {
-		if (!this.isDragging) return;
+	private readonly onPointerMove = (event: PointerEvent): void => {
+		if (!this.isDragging) {
+			return;
+		}
 
 		const deltaX = event.clientX - this.prevPointer.x;
 		const deltaY = event.clientY - this.prevPointer.y;
@@ -45,12 +70,14 @@ export class Viewport {
 		this.render();
 	};
 
-	private readonly onPointerUp = (event: PointerEvent) => {
+	private readonly onPointerUp = (event: PointerEvent): void => {
 		this.isDragging = false;
-		this.canvas.releasePointerCapture(event.pointerId);
+		if (this.canvas.hasPointerCapture(event.pointerId)) {
+			this.canvas.releasePointerCapture(event.pointerId);
+		}
 	};
 
-	private readonly onWheel = (event: WheelEvent) => {
+	private readonly onWheel = (event: WheelEvent): void => {
 		event.preventDefault();
 		const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
 
@@ -63,7 +90,7 @@ export class Viewport {
 		this.render();
 	};
 
-	public dispose() {
+	public dispose(): void {
 		this.canvas.removeEventListener("pointerdown", this.onPointerDown);
 		this.canvas.removeEventListener("pointermove", this.onPointerMove);
 		this.canvas.removeEventListener("pointerup", this.onPointerUp);

@@ -1,77 +1,80 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import * as THREE from 'three';
-    import { Viewport } from '$lib/Viewport';
-    import { CoordSystem } from '$lib/CoordSystem';
+	import { onMount } from "svelte";
+	import * as THREE from "three";
+	import { getContext } from "svelte";
+	import { Viewport } from "../Viewport";
+	import { CoordSystem } from "../CoordSystem";
+	import { Tools } from "../tools.svelte.ts";
+	import { type Toolbar, SceneState } from "../state.svelte.ts";
+	import { PointManager } from "../Point";
+	import { VectorManager } from "../Vector";
 
-    let canvasRef: HTMLCanvasElement;
-    let canvasWidth = $state(0);
-    let canvasHeight = $state(0);
-    let canvasAspect = $derived.by(() => {
-        if (canvasHeight === 0) return 1;
-        return canvasWidth / canvasHeight;
-    });
+	const toolbar: Toolbar = getContext("toolbar");
+	let sceneState: SceneState | null = null;
 
-    const fristumSize = 10;
+	let canvasRef!: HTMLCanvasElement;
+	let canvasWidth = $state(0);
+	let canvasHeight = $state(0);
+	let canvasAspect = $derived.by(() => {
+		if (canvasHeight === 0) {
+			return 1;
+		}
+		return canvasWidth / canvasHeight;
+	});
 
-    let scene: THREE.Scene;
-    let camera: THREE.OrthographicCamera;
-    let renderer: THREE.WebGLRenderer;
-    let viewport: Viewport;
+	const frustumSize = 10;
 
-    onMount(() => {
-        scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xffffff);
-        camera = new THREE.OrthographicCamera(
-            (-fristumSize * canvasAspect) / 2,
-            (fristumSize * canvasAspect) / 2,
-            fristumSize / 2,
-            -fristumSize / 2,
-            0.1, 
-            1000
-        );
-        renderer = new THREE.WebGLRenderer({ canvas: canvasRef, antialias: true });
-        renderer.setSize(canvasWidth, canvasHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        viewport = new Viewport(canvasRef, scene, camera, renderer);
+	let scene: THREE.Scene;
+	let camera: THREE.OrthographicCamera;
+	let renderer: THREE.WebGLRenderer;
+	let viewport: Viewport | null = $state(null);
 
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
+	onMount(() => {
+		scene = new THREE.Scene();
+		scene.background = new THREE.Color(0xffffff);
+		camera = new THREE.OrthographicCamera(
+			(-frustumSize * canvasAspect) / 2,
+			(frustumSize * canvasAspect) / 2,
+			frustumSize / 2,
+			-frustumSize / 2,
+			0.1,
+			1000,
+		);
+		camera.position.z = 3;
 
-        const coordSystem = new CoordSystem(scene, camera, canvasRef);
+		renderer = new THREE.WebGLRenderer({ canvas: canvasRef, antialias: true });
+		renderer.setSize(canvasWidth, canvasHeight);
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        camera.position.z = 3;
+		viewport = new Viewport(canvasRef, scene, camera, renderer);
 
-        let animationFrameId: number;
-        const animate = () => {
-            animationFrameId = requestAnimationFrame(animate);
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
-            coordSystem.update();
-            viewport.render();
-        };
-        animate();
+		const coordSystem = new CoordSystem(scene, camera, canvasRef);
+		viewport.addToRenderLoop(() => coordSystem.update());
 
-        return () => {
-            cancelAnimationFrame(animationFrameId);
-            coordSystem.dispose();
-            viewport.dispose();
-            geometry.dispose();
-            material.dispose();
-        };
-    })
+		const pointManager = new PointManager(scene, viewport);
+		const vectorManager = new VectorManager(scene, viewport);
+		sceneState = new SceneState(pointManager, vectorManager);
 
-    $effect(() => {
-        if (!renderer || !camera) return;
-        camera.left = (-fristumSize * canvasAspect) / 2;
-        camera.right = (fristumSize * canvasAspect) / 2;
-        camera.updateProjectionMatrix();
-        renderer.setSize(canvasWidth, canvasHeight);
+		new Tools(canvasRef, scene, viewport, toolbar, sceneState);
+		viewport.render();
 
-        renderer.render(scene, camera);
-    });
+		return () => {
+			coordSystem.dispose();
+			viewport?.dispose();
+		};
+	});
+
+	$effect(() => {
+		if (!renderer || !camera) {
+			return;
+		}
+
+		camera.left = (-frustumSize * canvasAspect) / 2;
+		camera.right = (frustumSize * canvasAspect) / 2;
+		camera.updateProjectionMatrix();
+		renderer.setSize(canvasWidth, canvasHeight);
+		renderer.render(scene, camera);
+	});
 </script>
 
 <div bind:clientHeight={canvasHeight} bind:clientWidth={canvasWidth} class="canvas-container">
