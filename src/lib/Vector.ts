@@ -4,11 +4,13 @@ import type { Viewport } from "./Viewport";
 
 export class Vector {
 	private readonly arrow: THREE.ArrowHelper;
+	private readonly unsubscribeFrom: () => void;
+	private readonly unsubscribeTo: () => void;
 
 	constructor(
 		public from: Point,
 		public to: Point,
-		scene: THREE.Scene,
+		private readonly scene: THREE.Scene,
 	) {
 		this.arrow = new THREE.ArrowHelper(
 			new THREE.Vector3(0, 1, 0),
@@ -20,11 +22,17 @@ export class Vector {
 		);
 		this.arrow.position.z = 1;
 
-		this.from.subscribe(() => this.update());
-		this.to.subscribe(() => this.update());
+		this.unsubscribeFrom = this.from.subscribe(() => this.update());
+		this.unsubscribeTo = this.to.subscribe(() => this.update());
 
-		scene.add(this.arrow);
+		this.scene.add(this.arrow);
 		this.update();
+	}
+
+	public dispose(): void {
+		this.scene.remove(this.arrow);
+		this.unsubscribeFrom();
+		this.unsubscribeTo();
 	}
 
 	public update(): void {
@@ -60,5 +68,16 @@ export class VectorManager {
 
 	public getVectors(): Vector[] {
 		return this.vectors;
+	}
+
+	public removeVector(vector: Vector): void {
+		const index = this.vectors.indexOf(vector);
+		if (index === -1) {
+			return;
+		}
+
+		vector.dispose();
+		this.vectors.splice(index, 1);
+		this.viewport.render();
 	}
 }

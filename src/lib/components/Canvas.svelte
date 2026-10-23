@@ -9,8 +9,10 @@
 	import { PointManager } from "../Point";
 	import { VectorManager } from "../Vector";
 
+	let { polygon }: { polygon: THREE.Vector2[] | null } = $props();
 	const toolbar: Toolbar = getContext("toolbar");
 	let sceneState: SceneState | null = null;
+	let isInitialized = $state(false);
 
 	let canvasRef!: HTMLCanvasElement;
 	let canvasWidth = $state(0);
@@ -56,11 +58,61 @@
 		sceneState = new SceneState(pointManager, vectorManager);
 
 		new Tools(canvasRef, scene, viewport, toolbar, sceneState);
+		isInitialized = true;
 		viewport.render();
 
 		return () => {
 			coordSystem.dispose();
 			viewport?.dispose();
+		};
+	});
+
+	$effect(() => {
+		if (
+			!isInitialized ||
+			!polygon ||
+			!sceneState ||
+			!scene ||
+			!camera ||
+			!viewport
+		) {
+			return;
+		}
+
+		const pointManager = sceneState.PointManager;
+		const vectorManager = sceneState.VectorManager;
+		const importedPoints = polygon.map((point) =>
+			pointManager.addPoint(point.x, point.y),
+		);
+		const importedVectors = importedPoints.map((point, index) =>
+			vectorManager.addVector(
+				point,
+				importedPoints[(index + 1) % importedPoints.length],
+			),
+		);
+
+		const bounds = new THREE.Box2().setFromPoints(polygon);
+		const size = bounds.getSize(new THREE.Vector2());
+		const center = bounds.getCenter(new THREE.Vector2());
+		const width = Math.max(size.x, Number.EPSILON);
+		const height = Math.max(size.y, Number.EPSILON);
+		camera.position.x = center.x;
+		camera.position.y = center.y;
+		camera.zoom = Math.min(
+			(camera.right - camera.left) / (width * 1.2),
+			(camera.top - camera.bottom) / (height * 1.2),
+		);
+		camera.updateProjectionMatrix();
+		viewport.render();
+
+		return () => {
+			for (const vector of importedVectors) {
+				vectorManager.removeVector(vector);
+			}
+			for (const point of importedPoints) {
+				pointManager.removePoint(point);
+			}
+			viewport?.render();
 		};
 	});
 

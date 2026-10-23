@@ -1,34 +1,33 @@
 <script lang="ts">
 	import Canvas from "#lib/components/Canvas.svelte";
-	import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 	import { getContext } from "svelte";
+	import * as THREE from "three";
+	import { parseFirstObjFace } from "../lib/ObjPolygon";
 	import type { Toolbar } from "../lib/state.svelte.ts";
 	import { Tool } from "../lib/Enums";
 
 	const toolbar: Toolbar = getContext("toolbar");
+	let importedFace: THREE.Vector2[] | null = $state(null);
+	let importError = $state("");
 
 	function handleImport(): void {
 		const input = document.createElement("input");
 		input.type = "file";
 		input.accept = ".obj";
 
-		input.onchange = (event: Event) => {
+		input.onchange = async (event: Event) => {
 			const target = event.target as HTMLInputElement;
 			if (!target.files || target.files.length === 0) {
 				return;
 			}
 
-			const file = target.files[0];
-			const loader = new OBJLoader();
-			const reader = new FileReader();
-
-			reader.addEventListener("load", () => {
-				const contents = reader.result as string;
-				const object = loader.parse(contents);
-				console.log("Imported OBJ:", object);
-			});
-
-			reader.readAsText(file);
+			try {
+				importedFace = parseFirstObjFace(await target.files[0].text());
+				importError = "";
+			} catch (error) {
+				importError =
+					error instanceof Error ? error.message : "Die OBJ-Datei konnte nicht importiert werden.";
+			}
 		};
 
 		input.click();
@@ -64,9 +63,12 @@
 			</div>
 			<button onclick={handleImport} class="import-btn">Import</button>
 		</nav>
+		{#if importError}
+			<p class="import-error" role="alert">{importError}</p>
+		{/if}
 	</div>
 	<div class="canvas-container">
-		<Canvas />
+		<Canvas polygon={importedFace} />
 	</div>
 </div>
 
@@ -90,6 +92,11 @@
         border-radius: 8px;
         background: blue;
     }
+
+	.import-error {
+		margin: 0.5rem 0 0;
+		color: #ff8080;
+	}
 
     .canvas-container {
         padding: 0 0.5rem 0.5rem 0.5rem;
