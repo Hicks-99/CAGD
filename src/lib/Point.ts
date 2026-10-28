@@ -89,7 +89,7 @@ export class PointManager {
 	}
 
 	private readonly onPointChanged = (point: Point): void => {
-		point.mesh.position.set(point.x, point.y, 0);
+		point.mesh.position.set(point.x, point.y, 2);
 		this.viewport.render();
 	};
 

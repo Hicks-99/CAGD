@@ -41,14 +41,16 @@
 				<button
 					onclick={() => (toolbar.selectedTool = Tool.Select)}
 					class:active={toolbar.selectedTool === Tool.Select}
-					aria-label="Select tool"
+					aria-label="Select tool. Select a point and press Delete or Backspace to remove it."
+					title="Select a point, then press Delete or Backspace to remove it"
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M173.3 66.5C181.4 62.4 191.2 63.3 198.4 68.8L518.4 308.7C526.7 314.9 530 325.7 526.8 335.5C523.6 345.3 514.4 351.9 504 351.9L351.7 351.9L440.6 529.6C448.5 545.4 442.1 564.6 426.3 572.5C410.5 580.4 391.3 574 383.4 558.2L294.5 380.5L203.2 502.3C197 510.6 186.2 513.9 176.4 510.7C166.6 507.5 160 498.3 160 488L160 88C160 78.9 165.1 70.6 173.3 66.5z"/></svg>
 				</button>
 				<button
 					onclick={() => (toolbar.selectedTool = Tool.Point)}
 					class:active={toolbar.selectedTool === Tool.Point}
-					aria-label="Point tool"
+					aria-label="Point tool. Click a vector to insert a point into it, or click and drag to create a point."
+					title="Click a vector to insert a point, or click and drag to create one"
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM320 224C373 224 416 267 416 320C416 373 373 416 320 416C267 416 224 373 224 320C224 267 267 224 320 224z"/></svg>
 				</button>

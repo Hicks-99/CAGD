@@ -70,6 +70,51 @@ export class VectorManager {
 		return this.vectors;
 	}
 
+	public getVectorAtPosition(
+		x: number,
+		y: number,
+		maxDistance: number,
+	): { vector: Vector; point: THREE.Vector2 } | null {
+		let closest:
+			| { vector: Vector; point: THREE.Vector2; distanceSquared: number }
+			| null = null;
+		const maxDistanceSquared = maxDistance * maxDistance;
+
+		for (const vector of this.vectors) {
+			const dx = vector.to.x - vector.from.x;
+			const dy = vector.to.y - vector.from.y;
+			const lengthSquared = dx * dx + dy * dy;
+			if (lengthSquared === 0) {
+				continue;
+			}
+
+			const projection = Math.max(
+				0,
+				Math.min(
+					1,
+					((x - vector.from.x) * dx + (y - vector.from.y) * dy) /
+						lengthSquared,
+				),
+			);
+			const point = new THREE.Vector2(
+				vector.from.x + projection * dx,
+				vector.from.y + projection * dy,
+			);
+			const distanceSquared = (x - point.x) ** 2 + (y - point.y) ** 2;
+
+			if (
+				distanceSquared <= maxDistanceSquared &&
+				(!closest || distanceSquared < closest.distanceSquared)
+			) {
+				closest = { vector, point, distanceSquared };
+			}
+		}
+
+		return closest
+			? { vector: closest.vector, point: closest.point }
+			: null;
+	}
+
 	public removeVector(vector: Vector): void {
 		const index = this.vectors.indexOf(vector);
 		if (index === -1) {

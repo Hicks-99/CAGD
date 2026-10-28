@@ -77,9 +77,64 @@ abstract class BaseTool {
 }
 
 class SelectTool extends BaseTool {
-	public enable() {}
+	private selectedPoint: Point | null = null;
+	private readonly raycaster = new THREE.Raycaster();
 
-	public disable() {}
+	public enable() {
+		this.canvas.addEventListener("pointerdown", this.onPointerDown);
+		window.addEventListener("keydown", this.onKeyDown);
+	}
+
+	public disable() {
+		this.canvas.removeEventListener("pointerdown", this.onPointerDown);
+		window.removeEventListener("keydown", this.onKeyDown);
+		this.setSelectedPoint(null);
+	}
+
+	private readonly getPointAt = (event: PointerEvent): Point | null => {
+		const rect = this.canvas.getBoundingClientRect();
+		const mouse = new THREE.Vector2(
+			((event.clientX - rect.left) / rect.width) * 2 - 1,
+			-((event.clientY - rect.top) / rect.height) * 2 + 1,
+		);
+		this.raycaster.setFromCamera(mouse, this.viewport.camera);
+		const intersects = this.raycaster.intersectObjects(
+			this.sceneState.PointManager.getPointMeshes(),
+			false,
+		);
+
+		return intersects.length > 0
+			? this.sceneState.PointManager.getPointByMesh(intersects[0].object)
+			: null;
+	};
+
+	private readonly setSelectedPoint = (point: Point | null): void => {
+		if (this.selectedPoint === point) return;
+
+		this.selectedPoint?.mesh.scale.setScalar(1);
+		this.selectedPoint = point;
+		this.selectedPoint?.mesh.scale.setScalar(1.5);
+		this.viewport.render();
+	};
+
+	private readonly onPointerDown = (event: PointerEvent): void => {
+		if (event.button === 0) {
+			this.setSelectedPoint(this.getPointAt(event));
+		}
+	};
+
+	private readonly onKeyDown = (event: KeyboardEvent): void => {
+		if (
+			!this.selectedPoint ||
+			(event.key !== "Delete" && event.key !== "Backspace")
+		) {
+			return;
+		}
+
+		event.preventDefault();
+		this.sceneState.removePoint(this.selectedPoint);
+		this.setSelectedPoint(null);
+	};
 }
 
 class PointTool extends BaseTool {
@@ -177,6 +232,26 @@ class PointTool extends BaseTool {
 		}
 
 		const worldPos = this.getWorldPosition(event);
+		const worldHeight =
+			(this.viewport.camera.top - this.viewport.camera.bottom) /
+			this.viewport.camera.zoom;
+		const worldPerPixel =
+			worldHeight / this.canvas.getBoundingClientRect().height;
+		const vectorHit = this.sceneState.VectorManager.getVectorAtPosition(
+			worldPos.x,
+			worldPos.y,
+			worldPerPixel * 8,
+		);
+
+		if (vectorHit) {
+			this.currentPoint = this.sceneState.insertPointIntoVector(
+				vectorHit.vector,
+				vectorHit.point.x,
+				vectorHit.point.y,
+			);
+			return;
+		}
+
 		this.currentPoint = this.sceneState.PointManager.addPoint(
 			worldPos.x,
 			worldPos.y,
